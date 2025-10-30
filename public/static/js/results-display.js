@@ -55,7 +55,8 @@ function generateSummarySlide(results) {
               </div>
             </div>
             <div class="risk-content">
-              必要保障額: ${deathBenefit.husband.requiredBenefit.toLocaleString()}万円<br>
+              <strong>夫:</strong> 必要保障額 ${deathBenefit.husband.requiredBenefit.toLocaleString()}万円<br>
+              <strong>妻:</strong> 必要保障額 ${deathBenefit.wife.requiredBenefit.toLocaleString()}万円<br>
               優先度: ${getPriorityLabel(riskAnalysis.death.priority)}
             </div>
           </div>
