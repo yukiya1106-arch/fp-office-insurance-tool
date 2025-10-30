@@ -108,6 +108,7 @@ function calculateDeathBenefitNeeds(userData, incomeData) {
 
 /**
  * 配偶者死亡時の必要保障額計算
+ * 計算式: 必要保障額 = 総支出額 - 総収入額
  * @param {Object} params - パラメータ
  * @returns {Object} - 計算結果
  */
@@ -115,39 +116,50 @@ function calculateDeathBenefitForSpouse(params) {
   const {
     incomeData,
     children,
-    yearsUntilYoungestGraduate,
     monthlyExpense,
     annualSpecialExpense,
     deceased,
     survivorAge
   } = params;
   
-  // 遺族の収入比率を計算
-  let survivorIncomeRatio;
-  if (deceased === 'husband') {
-    survivorIncomeRatio = incomeData.householdNet === 0 ? 0 : incomeData.wifeNet / incomeData.householdNet;
-  } else {
-    survivorIncomeRatio = incomeData.householdNet === 0 ? 0 : incomeData.husbandNet / incomeData.householdNet;
+  // 現在の年間生活費を計算
+  const currentAnnualLivingCost = monthlyExpense * 12 + annualSpecialExpense;
+  
+  // 子どもの情報取得
+  let youngestAge = 0;
+  let eldestAge = 0;
+  if (children.length > 0) {
+    youngestAge = Math.min(...children.map(c => c.age));
+    eldestAge = Math.max(...children.map(c => c.age));
   }
   
-  // 生活費削減率を動的計算
-  // 配偶者の収入比率が高いほど、生活費削減が少ない
-  let livingCostRatio;
-  if (survivorIncomeRatio >= 0.4) {
-    livingCostRatio = 0.90; // 収入比率40%以上: 生活費90%
-  } else if (survivorIncomeRatio >= 0.3) {
-    livingCostRatio = 0.85; // 収入比率30〜40%: 生活費85%
-  } else if (survivorIncomeRatio >= 0.2) {
-    livingCostRatio = 0.75; // 収入比率20〜30%: 生活費75%
-  } else {
-    livingCostRatio = 0.70; // 収入比率20%未満: 生活費70%
-  }
+  // 末子独立までの年数と独立後の配偶者の平均余命を計算
+  const yearsUntilYoungestIndependent = children.length > 0 ? Math.max(0, 22 - youngestAge) : 0;
   
-  // 1. 生活費総額
-  const annualLivingCost = (monthlyExpense * 12 + annualSpecialExpense) * livingCostRatio;
-  const totalLivingCost = Math.round(annualLivingCost * yearsUntilYoungestGraduate / 10000); // 万円
+  // 配偶者の平均余命（末子独立時点から）
+  const survivorAgeAtYoungestIndependence = survivorAge + yearsUntilYoungestIndependent;
+  const survivorRemainingYears = Math.max(0, 85 - survivorAgeAtYoungestIndependence); // 85歳まで
   
-  // 2. 教育費
+  // ========================================
+  // 総支出額の計算
+  // ========================================
+  
+  // 1. 末子独立までの生活費
+  // 現在の年間生活費 × 70～80% × （末子の独立時の年齢 - 末子の現在の年齢）
+  const livingCostRatioUntilIndependence = 0.75; // 75%で計算（70-80%の中間値）
+  const livingCostUntilIndependence = Math.round(
+    (currentAnnualLivingCost * livingCostRatioUntilIndependence * yearsUntilYoungestIndependent) / 10000
+  ); // 万円
+  
+  // 2. 末子独立後の配偶者の生活費
+  // 現在の年間生活費 × 50～60% × 配偶者の平均余命（末子が独立する時点）
+  const livingCostRatioAfterIndependence = 0.55; // 55%で計算（50-60%の中間値）
+  const livingCostAfterIndependence = Math.round(
+    (currentAnnualLivingCost * livingCostRatioAfterIndependence * survivorRemainingYears) / 10000
+  ); // 万円
+  
+  // 3. 別途必要となる資金
+  // 子どもの教育資金
   let totalEducationCost = 0;
   for (const child of children) {
     const baseCost = diagnosisCriteria.deathBenefitCalculation.educationCosts[child.education] || 1000;
@@ -155,49 +167,97 @@ function calculateDeathBenefitForSpouse(params) {
     totalEducationCost += baseCost + independentCost;
   }
   
-  // 3. 遺族年金
+  // 葬儀費用・予備費
+  const funeralAndReserveFund = 300; // 300万円
+  
+  // 4. 総支出額
+  const totalExpenses = livingCostUntilIndependence + livingCostAfterIndependence + totalEducationCost + funeralAndReserveFund;
+  
+  // ========================================
+  // 総収入額の計算
+  // ========================================
+  
+  // 1. 遺族年金
   const grossIncome = deceased === 'husband' ? incomeData.husbandGross : incomeData.wifeGross;
   let totalSurvivorPension = 0;
   
   if (children.length > 0) {
     // 子どもがいる場合
-    const youngestAge = Math.min(...children.map(c => c.age));
     const yearsUntil18 = Math.max(0, 18 - youngestAge);
-    const yearsFrom18to22 = Math.max(0, Math.min(22 - youngestAge, 22 - 18));
+    const yearsFrom18to22 = Math.max(0, Math.min(22, 22 - youngestAge) - yearsUntil18);
     
-    // 末子18歳まで: 基礎年金 + 厚生年金
+    // 末子18歳まで: 遺族基礎年金 + 遺族厚生年金
     const basicPension = diagnosisCriteria.deathBenefitCalculation.survivorPension.basicPension;
     const employeePension = grossIncome * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate;
     totalSurvivorPension += (basicPension + employeePension) * yearsUntil18;
     
-    // 18歳〜22歳: 厚生年金のみ
+    // 18歳〜22歳: 遺族厚生年金のみ
     const employeePensionAfter18 = employeePension + diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition;
     totalSurvivorPension += employeePensionAfter18 * yearsFrom18to22;
+    
+    // 末子独立後: 配偶者が65歳になるまで遺族厚生年金
+    const yearsFrom22to65 = Math.max(0, 65 - survivorAgeAtYoungestIndependence);
+    totalSurvivorPension += employeePensionAfter18 * yearsFrom22to65;
   } else {
-    // 子どもがいない場合
+    // 子どもがいない場合: 遺族厚生年金のみ（配偶者が65歳になるまで）
     const employeePension = grossIncome * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate;
     const totalPension = diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition + employeePension;
-    totalSurvivorPension = totalPension * yearsUntilYoungestGraduate;
+    const yearsUntil65 = Math.max(0, 65 - survivorAge);
+    totalSurvivorPension = totalPension * yearsUntil65;
   }
   totalSurvivorPension = Math.round(totalSurvivorPension / 10000); // 万円
   
-  // 4. 利用可能資産
+  // 2. 死亡退職金
+  let deathRetirement = 0;
+  if (deceased === 'husband') {
+    deathRetirement = Math.round((parseInt(params.husbandRetirement) || 0) / 10000);
+  } else {
+    deathRetirement = Math.round((parseInt(params.wifeRetirement) || 0) / 10000);
+  }
+  
+  // 3. 預貯金（緊急予備資金を除く）
   const savings = parseInt(params.savings) || 0;
   const otherAssets = parseInt(params.otherAssets) || 0;
   const emergencyFund = monthlyExpense * diagnosisCriteria.deathBenefitCalculation.emergencyFundMonths;
-  const availableAssets = Math.round((savings + otherAssets - emergencyFund) / 10000); // 万円
+  const availableAssets = Math.max(0, Math.round((savings + otherAssets - emergencyFund) / 10000)); // 万円
   
-  // 5. 退職金（生存配偶者の退職金を老後資金に充当）
-  let retirementAllocation = 0;
+  // 4. 遺族自身の今後の収入見込み
+  let survivorFutureIncome = 0;
   if (deceased === 'husband') {
-    const wifeRetirement = parseInt(params.wifeRetirement) || 0;
-    retirementAllocation = Math.round(wifeRetirement * diagnosisCriteria.deathBenefitCalculation.retirementFundAllocation / 10000);
+    // 妻の収入を計算（末子独立まで + 独立後の退職まで）
+    const wifeRetirementAge = parseInt(params.wifeRetirementAge) || 65;
+    const wifeAnnualNet = incomeData.wifeNet;
+    
+    // 末子独立までの収入
+    survivorFutureIncome += Math.round((wifeAnnualNet * yearsUntilYoungestIndependent) / 10000);
+    
+    // 独立後〜退職までの収入
+    const yearsAfterIndependenceUntilRetirement = Math.max(0, wifeRetirementAge - survivorAgeAtYoungestIndependence);
+    survivorFutureIncome += Math.round((wifeAnnualNet * yearsAfterIndependenceUntilRetirement) / 10000);
+    
+    // 妻の年金（退職後〜85歳まで）
+    const wifePension = parseInt(params.wifePension) || 0;
+    const yearsAfterRetirement = Math.max(0, 85 - wifeRetirementAge);
+    survivorFutureIncome += Math.round((wifePension * yearsAfterRetirement) / 10000);
   } else {
-    const husbandRetirement = parseInt(params.husbandRetirement) || 0;
-    retirementAllocation = Math.round(husbandRetirement * diagnosisCriteria.deathBenefitCalculation.retirementFundAllocation / 10000);
+    // 夫の収入を計算（末子独立まで + 独立後の退職まで）
+    const husbandRetirementAge = parseInt(params.husbandRetirementAge) || 65;
+    const husbandAnnualNet = incomeData.husbandNet;
+    
+    // 末子独立までの収入
+    survivorFutureIncome += Math.round((husbandAnnualNet * yearsUntilYoungestIndependent) / 10000);
+    
+    // 独立後〜退職までの収入
+    const yearsAfterIndependenceUntilRetirement = Math.max(0, husbandRetirementAge - survivorAgeAtYoungestIndependence);
+    survivorFutureIncome += Math.round((husbandAnnualNet * yearsAfterIndependenceUntilRetirement) / 10000);
+    
+    // 夫の年金（退職後〜85歳まで）
+    const husbandPension = parseInt(params.husbandPension) || 0;
+    const yearsAfterRetirement = Math.max(0, 85 - husbandRetirementAge);
+    survivorFutureIncome += Math.round((husbandPension * yearsAfterRetirement) / 10000);
   }
   
-  // 6. 団信（団体信用生命保険）による住宅ローン完済
+  // 5. 団信（団体信用生命保険）による住宅ローン完済
   let danshin = 0;
   if (deceased === 'husband') {
     danshin = Math.round((parseInt(params.husbandLoan) || 0) / 10000);
@@ -205,29 +265,41 @@ function calculateDeathBenefitForSpouse(params) {
     danshin = Math.round((parseInt(params.wifeLoan) || 0) / 10000);
   }
   
-  // 必要保障額の計算
-  const requiredBenefit = Math.max(0, totalLivingCost + totalEducationCost - totalSurvivorPension - availableAssets - retirementAllocation - danshin);
+  // 6. 総収入額
+  const totalIncome = totalSurvivorPension + deathRetirement + availableAssets + survivorFutureIncome + danshin;
   
-  // 最小保障額の設定（妻死亡時の場合）
-  let finalRequiredBenefit = requiredBenefit;
-  if (deceased === 'wife' && survivorIncomeRatio < 0.2) {
-    // 妻の収入が少ない場合、最小限の保障（500万円以下）
-    finalRequiredBenefit = Math.min(requiredBenefit, 500);
-  }
+  // ========================================
+  // 必要保障額の計算
+  // ========================================
+  const requiredBenefit = Math.max(0, totalExpenses - totalIncome);
   
   return {
-    totalLivingCost,
+    // 総支出額の内訳
+    livingCostUntilIndependence,
+    livingCostAfterIndependence,
     totalEducationCost,
+    funeralAndReserveFund,
+    totalExpenses,
+    
+    // 総収入額の内訳
     totalSurvivorPension,
+    deathRetirement,
     availableAssets,
-    retirementAllocation,
+    survivorFutureIncome,
     danshin,
-    requiredBenefit: finalRequiredBenefit,
+    totalIncome,
+    
+    // 必要保障額
+    requiredBenefit,
+    
+    // 補足情報
     breakdown: {
-      annualLivingCost: Math.round(annualLivingCost / 10000),
-      yearsUntilYoungestGraduate,
-      livingCostRatio,
-      survivorIncomeRatio
+      currentAnnualLivingCost: Math.round(currentAnnualLivingCost / 10000),
+      yearsUntilYoungestIndependent,
+      survivorRemainingYears,
+      survivorAgeAtYoungestIndependence,
+      livingCostRatioUntilIndependence,
+      livingCostRatioAfterIndependence
     }
   };
 }

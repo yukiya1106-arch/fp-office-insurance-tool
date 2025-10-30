@@ -392,13 +392,26 @@ function drawDeathBenefitBreakdownChart(canvasId, deathBenefitData, type) {
   
   const data = type === 'husband' ? deathBenefitData.husband : deathBenefitData.wife;
   
-  const labels = ['生活費', '教育費', '遺族年金\n(マイナス)', '利用可能資産\n(マイナス)', '退職金\n(マイナス)', '団信\n(マイナス)'];
+  const labels = [
+    '末子独立までの\n生活費',
+    '末子独立後の\n生活費',
+    '教育費',
+    '葬儀・予備費',
+    '遺族年金\n(マイナス)',
+    '死亡退職金\n(マイナス)',
+    '預貯金\n(マイナス)',
+    '遺族の収入\n(マイナス)',
+    '団信\n(マイナス)'
+  ];
   const values = [
-    data.totalLivingCost,
+    data.livingCostUntilIndependence,
+    data.livingCostAfterIndependence,
     data.totalEducationCost,
+    data.funeralAndReserveFund,
     -data.totalSurvivorPension,
+    -data.deathRetirement,
     -data.availableAssets,
-    -data.retirementAllocation,
+    -data.survivorFutureIncome,
     -data.danshin
   ];
   

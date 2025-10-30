@@ -153,35 +153,65 @@ function generateDeathRiskSlide(results) {
           </div>
         </div>
         
-        <h3 class="subsection-title mt-lg">夫死亡時の必要保障額</h3>
+        <h3 class="subsection-title mt-lg">夫死亡時の必要保障額（必要保障額 = 総支出額 - 総収入額）</h3>
+        
+        <h4 style="color: var(--danger); margin-top: 1rem;">📊 総支出額</h4>
         <div class="calculation-details">
           <div class="calculation-row">
-            <span class="calculation-label">生活費総額</span>
-            <span class="calculation-value positive">+${husband.totalLivingCost.toLocaleString()}万円</span>
+            <span class="calculation-label">末子独立までの生活費（現在の75%）</span>
+            <span class="calculation-value positive">+${husband.livingCostUntilIndependence.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">教育費総額</span>
+            <span class="calculation-label">末子独立後の配偶者の生活費（現在の55%）</span>
+            <span class="calculation-value positive">+${husband.livingCostAfterIndependence.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row">
+            <span class="calculation-label">子どもの教育資金</span>
             <span class="calculation-value positive">+${husband.totalEducationCost.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">遺族年金（生涯）</span>
+            <span class="calculation-label">葬儀費用・予備費</span>
+            <span class="calculation-value positive">+${husband.funeralAndReserveFund.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row" style="border-top: 2px solid var(--danger); margin-top: 0.5rem; padding-top: 0.5rem;">
+            <span class="calculation-label"><strong>総支出額</strong></span>
+            <span class="calculation-value positive"><strong>${husband.totalExpenses.toLocaleString()}万円</strong></span>
+          </div>
+        </div>
+        
+        <h4 style="color: var(--success); margin-top: 1.5rem;">💰 総収入額</h4>
+        <div class="calculation-details">
+          <div class="calculation-row">
+            <span class="calculation-label">遺族年金（遺族基礎年金+遺族厚生年金）</span>
             <span class="calculation-value negative">-${husband.totalSurvivorPension.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">利用可能資産</span>
+            <span class="calculation-label">死亡退職金</span>
+            <span class="calculation-value negative">-${husband.deathRetirement.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row">
+            <span class="calculation-label">預貯金（緊急予備資金を除く）</span>
             <span class="calculation-value negative">-${husband.availableAssets.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">妻の退職金（老後資金）</span>
-            <span class="calculation-value negative">-${husband.retirementAllocation.toLocaleString()}万円</span>
+            <span class="calculation-label">遺族（妻）の今後の収入見込み</span>
+            <span class="calculation-value negative">-${husband.survivorFutureIncome.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
             <span class="calculation-label">団信（住宅ローン完済）</span>
             <span class="calculation-value negative">-${husband.danshin.toLocaleString()}万円</span>
           </div>
-          <div class="calculation-row">
-            <span class="calculation-label"><strong>必要保障額</strong></span>
-            <span class="calculation-value"><strong>${husband.requiredBenefit.toLocaleString()}万円</strong></span>
+          <div class="calculation-row" style="border-top: 2px solid var(--success); margin-top: 0.5rem; padding-top: 0.5rem;">
+            <span class="calculation-label"><strong>総収入額</strong></span>
+            <span class="calculation-value negative"><strong>${husband.totalIncome.toLocaleString()}万円</strong></span>
+          </div>
+        </div>
+        
+        <div class="alert alert-warning" style="margin-top: 1.5rem;">
+          <i class="fas fa-calculator"></i>
+          <div>
+            <strong>必要保障額の計算</strong><br>
+            総支出額（${husband.totalExpenses.toLocaleString()}万円）- 総収入額（${husband.totalIncome.toLocaleString()}万円）= <strong style="font-size: 1.2em; color: var(--primary-blue);">${husband.requiredBenefit.toLocaleString()}万円</strong>
           </div>
         </div>
         
@@ -204,35 +234,65 @@ function generateDeathRiskSlide(results) {
           </div>
         </div>
         
-        <h3 class="subsection-title mt-lg">妻死亡時の必要保障額</h3>
+        <h3 class="subsection-title mt-lg">妻死亡時の必要保障額（必要保障額 = 総支出額 - 総収入額）</h3>
+        
+        <h4 style="color: var(--danger); margin-top: 1rem;">📊 総支出額</h4>
         <div class="calculation-details">
           <div class="calculation-row">
-            <span class="calculation-label">生活費総額</span>
-            <span class="calculation-value positive">+${wife.totalLivingCost.toLocaleString()}万円</span>
+            <span class="calculation-label">末子独立までの生活費（現在の75%）</span>
+            <span class="calculation-value positive">+${wife.livingCostUntilIndependence.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">教育費総額</span>
+            <span class="calculation-label">末子独立後の配偶者の生活費（現在の55%）</span>
+            <span class="calculation-value positive">+${wife.livingCostAfterIndependence.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row">
+            <span class="calculation-label">子どもの教育資金</span>
             <span class="calculation-value positive">+${wife.totalEducationCost.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">遺族年金（生涯）</span>
+            <span class="calculation-label">葬儀費用・予備費</span>
+            <span class="calculation-value positive">+${wife.funeralAndReserveFund.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row" style="border-top: 2px solid var(--danger); margin-top: 0.5rem; padding-top: 0.5rem;">
+            <span class="calculation-label"><strong>総支出額</strong></span>
+            <span class="calculation-value positive"><strong>${wife.totalExpenses.toLocaleString()}万円</strong></span>
+          </div>
+        </div>
+        
+        <h4 style="color: var(--success); margin-top: 1.5rem;">💰 総収入額</h4>
+        <div class="calculation-details">
+          <div class="calculation-row">
+            <span class="calculation-label">遺族年金（遺族基礎年金+遺族厚生年金）</span>
             <span class="calculation-value negative">-${wife.totalSurvivorPension.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">利用可能資産</span>
+            <span class="calculation-label">死亡退職金</span>
+            <span class="calculation-value negative">-${wife.deathRetirement.toLocaleString()}万円</span>
+          </div>
+          <div class="calculation-row">
+            <span class="calculation-label">預貯金（緊急予備資金を除く）</span>
             <span class="calculation-value negative">-${wife.availableAssets.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
-            <span class="calculation-label">夫の退職金（老後資金）</span>
-            <span class="calculation-value negative">-${wife.retirementAllocation.toLocaleString()}万円</span>
+            <span class="calculation-label">遺族（夫）の今後の収入見込み</span>
+            <span class="calculation-value negative">-${wife.survivorFutureIncome.toLocaleString()}万円</span>
           </div>
           <div class="calculation-row">
             <span class="calculation-label">団信（住宅ローン完済）</span>
             <span class="calculation-value negative">-${wife.danshin.toLocaleString()}万円</span>
           </div>
-          <div class="calculation-row">
-            <span class="calculation-label"><strong>必要保障額</strong></span>
-            <span class="calculation-value"><strong>${wife.requiredBenefit.toLocaleString()}万円</strong></span>
+          <div class="calculation-row" style="border-top: 2px solid var(--success); margin-top: 0.5rem; padding-top: 0.5rem;">
+            <span class="calculation-label"><strong>総収入額</strong></span>
+            <span class="calculation-value negative"><strong>${wife.totalIncome.toLocaleString()}万円</strong></span>
+          </div>
+        </div>
+        
+        <div class="alert alert-warning" style="margin-top: 1.5rem;">
+          <i class="fas fa-calculator"></i>
+          <div>
+            <strong>必要保障額の計算</strong><br>
+            総支出額（${wife.totalExpenses.toLocaleString()}万円）- 総収入額（${wife.totalIncome.toLocaleString()}万円）= <strong style="font-size: 1.2em; color: var(--primary-blue);">${wife.requiredBenefit.toLocaleString()}万円</strong>
           </div>
         </div>
         
