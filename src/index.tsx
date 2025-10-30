@@ -153,13 +153,13 @@ app.get('/', (c) => {
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="husbandIncome">世帯主の年収（額面）</label>
-                                <input type="number" id="husbandIncome" name="husbandIncome" required min="0" step="10" placeholder="5000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="husbandIncome" name="husbandIncome" required min="0" step="1" placeholder="500">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="wifeIncome">配偶者の年収（額面）</label>
-                                <input type="number" id="wifeIncome" name="wifeIncome" required min="0" step="10" placeholder="1000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="wifeIncome" name="wifeIncome" required min="0" step="1" placeholder="100">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group info-card">
                                 <div class="info-label">世帯年収（手取り）</div>
@@ -167,33 +167,33 @@ app.get('/', (c) => {
                             </div>
                             <div class="form-group">
                                 <label for="monthlyExpense">月々の生活費</label>
-                                <input type="number" id="monthlyExpense" name="monthlyExpense" required min="0" step="10000" placeholder="250000">
-                                <span class="input-hint">円（住宅費・教育費を除く）</span>
+                                <input type="number" id="monthlyExpense" name="monthlyExpense" required min="0" step="1" placeholder="25">
+                                <span class="input-hint">万円（住宅費・教育費を除く）</span>
                             </div>
                             <div class="form-group">
                                 <label for="savings">貯蓄額</label>
-                                <input type="number" id="savings" name="savings" required min="0" step="100000" placeholder="3000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="savings" name="savings" required min="0" step="10" placeholder="300">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="otherAssets">その他の資産</label>
-                                <input type="number" id="otherAssets" name="otherAssets" min="0" step="100000" placeholder="2000000">
-                                <span class="input-hint">円（株式、投資信託等）</span>
+                                <input type="number" id="otherAssets" name="otherAssets" min="0" step="10" placeholder="200">
+                                <span class="input-hint">万円（株式、投資信託等）</span>
                             </div>
                             <div class="form-group">
                                 <label for="husbandLoan">世帯主の住宅ローン残高</label>
-                                <input type="number" id="husbandLoan" name="husbandLoan" min="0" step="100000" placeholder="0">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="husbandLoan" name="husbandLoan" min="0" step="10" placeholder="0">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="wifeLoan">配偶者の住宅ローン残高</label>
-                                <input type="number" id="wifeLoan" name="wifeLoan" min="0" step="100000" placeholder="0">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="wifeLoan" name="wifeLoan" min="0" step="10" placeholder="0">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="annualSpecialExpense">年間の特別支出</label>
-                                <input type="number" id="annualSpecialExpense" name="annualSpecialExpense" min="0" step="10000" placeholder="600000">
-                                <span class="input-hint">円（レジャー、家電購入等）</span>
+                                <input type="number" id="annualSpecialExpense" name="annualSpecialExpense" min="0" step="1" placeholder="60">
+                                <span class="input-hint">万円（レジャー、家電購入等）</span>
                             </div>
                         </div>
 
@@ -206,13 +206,13 @@ app.get('/', (c) => {
                             </div>
                             <div class="form-group">
                                 <label for="husbandRetirement">退職金見込み額</label>
-                                <input type="number" id="husbandRetirement" name="husbandRetirement" min="0" step="100000" placeholder="20000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="husbandRetirement" name="husbandRetirement" min="0" step="10" placeholder="2000">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="husbandPension">公的年金見込み額（年額）</label>
-                                <input type="number" id="husbandPension" name="husbandPension" min="0" step="10000" placeholder="2000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="husbandPension" name="husbandPension" min="0" step="1" placeholder="200">
+                                <span class="input-hint">万円</span>
                             </div>
                         </div>
 
@@ -225,13 +225,13 @@ app.get('/', (c) => {
                             </div>
                             <div class="form-group">
                                 <label for="wifeRetirement">退職金見込み額</label>
-                                <input type="number" id="wifeRetirement" name="wifeRetirement" min="0" step="100000" placeholder="5000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="wifeRetirement" name="wifeRetirement" min="0" step="10" placeholder="500">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="wifePension">公的年金見込み額（年額）</label>
-                                <input type="number" id="wifePension" name="wifePension" min="0" step="10000" placeholder="800000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="wifePension" name="wifePension" min="0" step="1" placeholder="80">
+                                <span class="input-hint">万円</span>
                             </div>
                         </div>
 
@@ -314,11 +314,15 @@ app.get('/', (c) => {
                         <h2 class="step-title">
                             <i class="fas fa-file-contract"></i> 既契約保険
                         </h2>
+                        
+                        <h3 class="subsection-title" style="margin-top: 0;">
+                            <i class="fas fa-male"></i> 世帯主の既契約保険
+                        </h3>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="existingDeathBenefit">死亡保障額</label>
-                                <input type="number" id="existingDeathBenefit" name="existingDeathBenefit" min="0" step="1000000" placeholder="10000000">
-                                <span class="input-hint">円</span>
+                                <input type="number" id="existingDeathBenefit" name="existingDeathBenefit" min="0" step="100" placeholder="1000">
+                                <span class="input-hint">万円</span>
                             </div>
                             <div class="form-group">
                                 <label for="existingMedical">医療保険</label>
@@ -339,6 +343,41 @@ app.get('/', (c) => {
                             <div class="form-group">
                                 <label for="existingDisability">就業不能保険</label>
                                 <select id="existingDisability" name="existingDisability" required>
+                                    <option value="none">未加入</option>
+                                    <option value="basic">基本的な就業不能保険</option>
+                                    <option value="comprehensive">充実した就業不能保険</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <h3 class="subsection-title" style="margin-top: 2rem;">
+                            <i class="fas fa-female"></i> 配偶者の既契約保険
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="wifeExistingDeathBenefit">死亡保障額</label>
+                                <input type="number" id="wifeExistingDeathBenefit" name="wifeExistingDeathBenefit" min="0" step="100" placeholder="500">
+                                <span class="input-hint">万円</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="wifeExistingMedical">医療保険</label>
+                                <select id="wifeExistingMedical" name="wifeExistingMedical" required>
+                                    <option value="none">未加入</option>
+                                    <option value="basic">基本的な医療保険</option>
+                                    <option value="comprehensive">充実した医療保険</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wifeExistingCancer">がん保険</label>
+                                <select id="wifeExistingCancer" name="wifeExistingCancer" required>
+                                    <option value="none">未加入</option>
+                                    <option value="basic">基本的ながん保険</option>
+                                    <option value="comprehensive">充実したがん保険</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wifeExistingDisability">就業不能保険</label>
+                                <select id="wifeExistingDisability" name="wifeExistingDisability" required>
                                     <option value="none">未加入</option>
                                     <option value="basic">基本的な就業不能保険</option>
                                     <option value="comprehensive">充実した就業不能保険</option>

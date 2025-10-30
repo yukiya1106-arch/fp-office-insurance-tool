@@ -70,7 +70,7 @@ function calculateDeathBenefitNeeds(userData, incomeData) {
     yearsUntilYoungestGraduate = Math.max(0, husbandRetirementAge - husbandAge);
   }
   
-  // 月々の生活費
+  // 月々の生活費（すでに円単位に変換済み）
   const monthlyExpense = parseInt(userData.monthlyExpense) || 0;
   const annualSpecialExpense = parseInt(userData.annualSpecialExpense) || 0;
   
@@ -152,8 +152,8 @@ function calculateDeathBenefitForSpouse(params) {
   ); // 万円
   
   // 2. 末子独立後の配偶者の生活費
-  // 現在の年間生活費 × 50～60% × 配偶者の平均余命（末子が独立する時点）
-  const livingCostRatioAfterIndependence = 0.55; // 55%で計算（50-60%の中間値）
+  // 現在の年間生活費 × 90%（-10%）× 配偶者の平均余命（末子が独立する時点）
+  const livingCostRatioAfterIndependence = 0.90; // 90%で計算（現状-10%）
   const livingCostAfterIndependence = Math.round(
     (currentAnnualLivingCost * livingCostRatioAfterIndependence * survivorRemainingYears) / 10000
   ); // 万円
@@ -207,7 +207,7 @@ function calculateDeathBenefitForSpouse(params) {
   }
   totalSurvivorPension = Math.round(totalSurvivorPension / 10000); // 万円
   
-  // 2. 死亡退職金
+  // 2. 死亡退職金（すでに円単位に変換済みなので、万円に戻す）
   let deathRetirement = 0;
   if (deceased === 'husband') {
     deathRetirement = Math.round((parseInt(params.husbandRetirement) || 0) / 10000);
@@ -215,7 +215,7 @@ function calculateDeathBenefitForSpouse(params) {
     deathRetirement = Math.round((parseInt(params.wifeRetirement) || 0) / 10000);
   }
   
-  // 3. 預貯金（緊急予備資金を除く）
+  // 3. 預貯金（緊急予備資金を除く）（すでに円単位に変換済み）
   const savings = parseInt(params.savings) || 0;
   const otherAssets = parseInt(params.otherAssets) || 0;
   const emergencyFund = monthlyExpense * diagnosisCriteria.deathBenefitCalculation.emergencyFundMonths;
@@ -257,7 +257,7 @@ function calculateDeathBenefitForSpouse(params) {
     survivorFutureIncome += Math.round((husbandPension * yearsAfterRetirement) / 10000);
   }
   
-  // 5. 団信（団体信用生命保険）による住宅ローン完済
+  // 5. 団信（団体信用生命保険）による住宅ローン完済（すでに円単位に変換済みなので、万円に戻す）
   let danshin = 0;
   if (deceased === 'husband') {
     danshin = Math.round((parseInt(params.husbandLoan) || 0) / 10000);
@@ -313,6 +313,7 @@ function calculateDeathBenefitForSpouse(params) {
 function calculateLifePlanSimulation(userData, incomeData) {
   const husbandAge = parseInt(userData.husbandAge);
   const wifeAge = parseInt(userData.wifeAge);
+  // すでに円単位に変換済み
   const savings = parseInt(userData.savings) || 0;
   const otherAssets = parseInt(userData.otherAssets) || 0;
   const monthlyExpense = parseInt(userData.monthlyExpense) || 0;
@@ -387,9 +388,9 @@ function calculateLifePlanSimulation(userData, incomeData) {
       }
     }
     
-    // 遺族年金
-    const survivorPension = (diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition + 
-                            incomeData.husbandGross * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate) * 10000;
+    // 遺族年金（円単位で計算）
+    const survivorPension = diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition + 
+                            incomeData.husbandGross * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate;
     annualIncome += survivorPension;
     
     // 支出（70%に削減）
@@ -421,8 +422,8 @@ function calculateLifePlanSimulation(userData, incomeData) {
     // 遺族年金（妻の収入が20%以上の場合のみ考慮）
     const wifeIncomeRatio = incomeData.householdNet === 0 ? 0 : incomeData.wifeNet / incomeData.householdNet;
     if (wifeIncomeRatio >= 0.2) {
-      const survivorPension = (diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition + 
-                              incomeData.wifeGross * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate) * 10000;
+      const survivorPension = diagnosisCriteria.deathBenefitCalculation.survivorPension.noChildAddition + 
+                              incomeData.wifeGross * diagnosisCriteria.deathBenefitCalculation.survivorPension.employeePensionRate;
       annualIncome += survivorPension;
     }
     
@@ -502,6 +503,7 @@ function analyzeRisks(userData, deathBenefit) {
  */
 function calculateDeathRiskScore(requiredBenefit, existingBenefit) {
   if (requiredBenefit === 0) return 100;
+  // existingBenefitはすでに円単位に変換済みなので、万円に戻す
   const coverageRatio = (existingBenefit / 10000) / requiredBenefit;
   return Math.min(100, Math.round(coverageRatio * 100));
 }
@@ -577,7 +579,9 @@ function getRiskLevel(score) {
  * 保障充足度分析
  */
 function analyzeCoverageAdequacy(userData, deathBenefit) {
+  // すでに円単位に変換済み
   const existingDeathBenefit = parseInt(userData.existingDeathBenefit) || 0;
+  const wifeExistingDeathBenefit = parseInt(userData.wifeExistingDeathBenefit) || 0;
   
   return {
     husband: {
@@ -589,9 +593,10 @@ function analyzeCoverageAdequacy(userData, deathBenefit) {
     },
     wife: {
       required: deathBenefit.wife.requiredBenefit,
-      existing: 0, // 妻の既契約保険は通常入力されない
-      shortage: deathBenefit.wife.requiredBenefit,
-      coverageRatio: 0
+      existing: Math.round(wifeExistingDeathBenefit / 10000),
+      shortage: Math.max(0, deathBenefit.wife.requiredBenefit - Math.round(wifeExistingDeathBenefit / 10000)),
+      coverageRatio: deathBenefit.wife.requiredBenefit === 0 ? 100 : 
+                     Math.min(100, Math.round((wifeExistingDeathBenefit / 10000) / deathBenefit.wife.requiredBenefit * 100))
     }
   };
 }
@@ -603,6 +608,7 @@ function matchInsuranceProducts(userData, riskAnalysis, coverageAnalysis) {
   const husbandAge = parseInt(userData.husbandAge);
   const smoking = userData.smoking;
   const husbandOccupation = userData.husbandOccupation;
+  // すでに円単位に変換済みなので、万円に戻す
   const savings = parseInt(userData.savings) || 0;
   const otherAssets = parseInt(userData.otherAssets) || 0;
   const totalAssets = (savings + otherAssets) / 10000; // 万円

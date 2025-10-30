@@ -97,9 +97,10 @@ function updateNetIncomeDisplay() {
   const husbandOccupation = document.getElementById('husbandOccupation')?.value || 'employee';
   const wifeOccupation = document.getElementById('wifeOccupation')?.value || 'employee';
   
+  // 万円を円に変換してから計算
   const incomeData = calculateHouseholdNetIncome({
-    husbandIncome,
-    wifeIncome,
+    husbandIncome: husbandIncome * 10000,
+    wifeIncome: wifeIncome * 10000,
     husbandOccupation,
     wifeOccupation
   });
@@ -188,6 +189,48 @@ function validateStep(step) {
     }
   });
   
+  // ステップ1の場合、年齢差をチェック
+  if (step === 1 && isValid) {
+    const husbandAge = parseInt(document.getElementById('husbandAge')?.value) || 0;
+    const wifeAge = parseInt(document.getElementById('wifeAge')?.value) || 0;
+    const ageDifference = Math.abs(husbandAge - wifeAge);
+    
+    // 既存のアラートを削除
+    const existingAlert = stepElement.querySelector('.age-difference-alert');
+    if (existingAlert) {
+      existingAlert.remove();
+    }
+    
+    // 年齢差が5歳以上の場合、警告を表示
+    if (ageDifference >= diagnosisCriteria.ageDifferenceWarning) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'age-difference-alert';
+      alertDiv.style.cssText = `
+        background-color: #fef3c7;
+        border: 2px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: start;
+        gap: 0.75rem;
+      `;
+      alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.5rem; margin-top: 0.25rem;"></i>
+        <div style="flex: 1;">
+          <strong style="color: #92400e; font-size: 1rem;">年齢差に関する注意</strong><br>
+          <span style="color: #78350f; font-size: 0.9rem;">
+            夫婦の年齢差が${ageDifference}歳あります。配偶者単独期間が長くなる可能性があるため、
+            遺族年金や老後資金の準備について特に注意が必要です。
+          </span>
+        </div>
+      `;
+      
+      // ステップの最後に追加
+      stepElement.appendChild(alertDiv);
+    }
+  }
+  
   return isValid;
 }
 
@@ -197,6 +240,14 @@ function validateStep(step) {
 function saveStepData(step) {
   const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
   if (!stepElement) return;
+  
+  // 万円単位の入力フィールド（円に変換が必要）
+  const manYenFields = [
+    'husbandIncome', 'wifeIncome', 'monthlyExpense', 'annualSpecialExpense',
+    'savings', 'otherAssets', 'husbandLoan', 'wifeLoan',
+    'husbandRetirement', 'wifeRetirement', 'husbandPension', 'wifePension',
+    'existingDeathBenefit', 'wifeExistingDeathBenefit'
+  ];
   
   const inputs = stepElement.querySelectorAll('input, select');
   inputs.forEach(input => {
@@ -208,7 +259,13 @@ function saveStepData(step) {
         userData.riskConcerns.push(input.value);
       }
     } else {
-      userData[input.name] = input.value;
+      // 万円フィールドの場合は円に変換（×10000）
+      if (manYenFields.includes(input.name)) {
+        const manYenValue = parseInt(input.value) || 0;
+        userData[input.name] = manYenValue * 10000; // 円に変換
+      } else {
+        userData[input.name] = input.value;
+      }
     }
   });
   
@@ -317,15 +374,15 @@ function updateConfirmationScreen() {
         </div>
         <div class="confirmation-item">
           <span class="confirmation-label">月々の生活費</span>
-          <span class="confirmation-value">${formatCurrency(parseInt(userData.monthlyExpense || 0))}</span>
+          <span class="confirmation-value">${Math.round((parseInt(userData.monthlyExpense || 0)) / 10000).toLocaleString()}万円</span>
         </div>
         <div class="confirmation-item">
           <span class="confirmation-label">貯蓄額</span>
-          <span class="confirmation-value">${formatCurrency(parseInt(userData.savings || 0))}</span>
+          <span class="confirmation-value">${Math.round((parseInt(userData.savings || 0)) / 10000).toLocaleString()}万円</span>
         </div>
         <div class="confirmation-item">
           <span class="confirmation-label">住宅ローン残高</span>
-          <span class="confirmation-value">世帯主: ${formatCurrency(parseInt(userData.husbandLoan || 0))}<br>配偶者: ${formatCurrency(parseInt(userData.wifeLoan || 0))}</span>
+          <span class="confirmation-value">世帯主: ${Math.round((parseInt(userData.husbandLoan || 0)) / 10000).toLocaleString()}万円<br>配偶者: ${Math.round((parseInt(userData.wifeLoan || 0)) / 10000).toLocaleString()}万円</span>
         </div>
       </div>
     </div>
@@ -354,10 +411,11 @@ function updateConfirmationScreen() {
     
     <div class="confirmation-section">
       <h3 class="confirmation-title"><i class="fas fa-file-contract"></i> 既契約保険</h3>
+      <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-secondary);"><i class="fas fa-male"></i> 世帯主</h4>
       <div class="confirmation-grid">
         <div class="confirmation-item">
           <span class="confirmation-label">死亡保障額</span>
-          <span class="confirmation-value">${formatCurrency(parseInt(userData.existingDeathBenefit || 0))}</span>
+          <span class="confirmation-value">${Math.round((parseInt(userData.existingDeathBenefit || 0)) / 10000).toLocaleString()}万円</span>
         </div>
         <div class="confirmation-item">
           <span class="confirmation-label">医療保険</span>
@@ -370,6 +428,25 @@ function updateConfirmationScreen() {
         <div class="confirmation-item">
           <span class="confirmation-label">就業不能保険</span>
           <span class="confirmation-value">${getInsuranceLabel(userData.existingDisability)}</span>
+        </div>
+      </div>
+      <h4 style="margin: 1.5rem 0 0.5rem 0; color: var(--text-secondary);"><i class="fas fa-female"></i> 配偶者</h4>
+      <div class="confirmation-grid">
+        <div class="confirmation-item">
+          <span class="confirmation-label">死亡保障額</span>
+          <span class="confirmation-value">${Math.round((parseInt(userData.wifeExistingDeathBenefit || 0)) / 10000).toLocaleString()}万円</span>
+        </div>
+        <div class="confirmation-item">
+          <span class="confirmation-label">医療保険</span>
+          <span class="confirmation-value">${getInsuranceLabel(userData.wifeExistingMedical)}</span>
+        </div>
+        <div class="confirmation-item">
+          <span class="confirmation-label">がん保険</span>
+          <span class="confirmation-value">${getInsuranceLabel(userData.wifeExistingCancer)}</span>
+        </div>
+        <div class="confirmation-item">
+          <span class="confirmation-label">就業不能保険</span>
+          <span class="confirmation-value">${getInsuranceLabel(userData.wifeExistingDisability)}</span>
         </div>
       </div>
     </div>

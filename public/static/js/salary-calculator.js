@@ -42,15 +42,16 @@ function getDeductionRate(occupation, grossIncome) {
 
 /**
  * 手取り年収を計算
- * @param {number} grossIncome - 額面年収
+ * @param {number} grossIncome - 額面年収（円単位）※main.jsで既に×10000済み
  * @param {string} occupation - 職業形態
- * @returns {number} - 手取り年収
+ * @returns {number} - 手取り年収（円単位）
  */
 function calculateNetIncome(grossIncome, occupation) {
   if (occupation === 'housewife' || grossIncome === 0) {
     return 0;
   }
   
+  // grossIncomeは既に円単位に変換済み
   const deductionRate = getDeductionRate(occupation, grossIncome);
   const netIncome = grossIncome * (1 - deductionRate);
   
@@ -59,8 +60,8 @@ function calculateNetIncome(grossIncome, occupation) {
 
 /**
  * 世帯の手取り年収を計算
- * @param {Object} data - 入力データ
- * @returns {Object} - 計算結果
+ * @param {Object} data - 入力データ（円単位）※main.jsで既に×10000済み
+ * @returns {Object} - 計算結果（円単位）
  */
 function calculateHouseholdNetIncome(data) {
   const husbandGross = parseInt(data.husbandIncome) || 0;
@@ -71,13 +72,14 @@ function calculateHouseholdNetIncome(data) {
   const husbandNet = calculateNetIncome(husbandGross, husbandOccupation);
   const wifeNet = calculateNetIncome(wifeGross, wifeOccupation);
   
+  // 既に円単位なのでそのまま返す
   return {
     husbandGross,
     husbandNet,
-    husbandDeductionRate: getDeductionRate(husbandOccupation, husbandGross),
+    husbandDeductionRate: getDeductionRate(husbandGross, husbandOccupation),
     wifeGross,
     wifeNet,
-    wifeDeductionRate: getDeductionRate(wifeOccupation, wifeGross),
+    wifeDeductionRate: getDeductionRate(wifeGross, wifeOccupation),
     householdGross: husbandGross + wifeGross,
     householdNet: husbandNet + wifeNet
   };
