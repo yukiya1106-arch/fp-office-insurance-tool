@@ -55,7 +55,8 @@ function calculateDeathBenefitNeeds(userData, incomeData) {
     children.push({
       age: parseInt(userData[`child${i}Age`]) || 0,
       education: userData[`child${i}Education`] || 'all-public',
-      independent: userData[`child${i}Independent`] === 'yes'
+      independent: userData[`child${i}Independent`] === 'yes',
+      customCost: parseInt(userData[`child${i}CustomCost`]) || 0
     });
   }
   
@@ -162,7 +163,16 @@ function calculateDeathBenefitForSpouse(params) {
   // 子どもの教育資金
   let totalEducationCost = 0;
   for (const child of children) {
-    const baseCost = diagnosisCriteria.deathBenefitCalculation.educationCosts[child.education] || 1000;
+    let baseCost = 0;
+    
+    // カスタム入力の場合は直接入力された金額を使用（既に万円単位）
+    if (child.education === 'custom' && child.customCost) {
+      baseCost = parseInt(child.customCost) || 0;
+    } else {
+      // 標準の教育方針の場合
+      baseCost = diagnosisCriteria.deathBenefitCalculation.educationCosts[child.education] || 1000;
+    }
+    
     const independentCost = child.independent ? diagnosisCriteria.deathBenefitCalculation.collegeIndependentCost : 0;
     totalEducationCost += baseCost + independentCost;
   }

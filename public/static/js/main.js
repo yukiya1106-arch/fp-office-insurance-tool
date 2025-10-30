@@ -174,6 +174,24 @@ function updateNetIncomeDisplay() {
 }
 
 /**
+ * カスタム教育費用入力の表示/非表示を切り替え
+ */
+function toggleCustomEducationCost(childIndex) {
+  const select = document.getElementById(`child${childIndex}Education`);
+  const customCostGroup = document.getElementById(`child${childIndex}CustomCostGroup`);
+  const customCostInput = document.getElementById(`child${childIndex}CustomCost`);
+  
+  if (select.value === 'custom') {
+    customCostGroup.style.display = 'block';
+    customCostInput.required = true;
+  } else {
+    customCostGroup.style.display = 'none';
+    customCostInput.required = false;
+    customCostInput.value = '';
+  }
+}
+
+/**
  * 子どもの詳細フォームを更新
  */
 function updateChildrenDetails() {
@@ -197,12 +215,18 @@ function updateChildrenDetails() {
         </div>
         <div class="form-group">
           <label for="child${i}Education">教育方針</label>
-          <select id="child${i}Education" name="child${i}Education" required>
+          <select id="child${i}Education" name="child${i}Education" required onchange="toggleCustomEducationCost(${i})">
             <option value="all-public">全て公立（1,000万円以下）</option>
             <option value="private-from-elementary">小学校から私立（2,000万円〜）</option>
             <option value="private-from-junior-high">中学から私立（1,700万円〜）</option>
             <option value="private-from-high">高校から私立（1,500万円〜）</option>
+            <option value="custom">その他（直接入力）</option>
           </select>
+        </div>
+        <div class="form-group" id="child${i}CustomCostGroup" style="display: none;">
+          <label for="child${i}CustomCost">教育資金（直接入力）</label>
+          <input type="number" id="child${i}CustomCost" name="child${i}CustomCost" min="0" step="10" placeholder="500">
+          <span class="input-hint">万円</span>
         </div>
         <div class="form-group">
           <label for="child${i}Independent">大学時の一人暮らし</label>
@@ -378,12 +402,19 @@ function updateConfirmationScreen() {
     const education = userData[`child${i}Education`] || '-';
     const independent = userData[`child${i}Independent`] || 'no';
     
-    const educationLabel = {
+    let educationLabel = {
       'all-public': '全て公立',
       'private-from-elementary': '小学校から私立',
       'private-from-junior-high': '中学から私立',
-      'private-from-high': '高校から私立'
+      'private-from-high': '高校から私立',
+      'custom': 'その他（直接入力）'
     }[education] || education;
+    
+    // カスタム入力の場合は金額も表示
+    if (education === 'custom') {
+      const customCost = userData[`child${i}CustomCost`] || '-';
+      educationLabel = `その他（${customCost}万円）`;
+    }
     
     const independentLabel = independent === 'yes' ? 'あり' : 'なし';
     
