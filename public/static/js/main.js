@@ -69,6 +69,15 @@ function attachEventListeners() {
     }
   });
   
+  // 年齢差アラートの自動表示
+  ['husbandAge', 'wifeAge'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener('input', checkAgeDifference);
+      element.addEventListener('change', checkAgeDifference);
+    }
+  });
+  
   // フォームに戻るボタン
   const backToFormBtn = document.getElementById('backToForm');
   if (backToFormBtn) {
@@ -85,6 +94,59 @@ function attachEventListeners() {
     printBtn.addEventListener('click', function() {
       window.print();
     });
+  }
+}
+
+/**
+ * 年齢差をチェックしてアラートを表示
+ */
+function checkAgeDifference() {
+  const husbandAge = parseInt(document.getElementById('husbandAge')?.value) || 0;
+  const wifeAge = parseInt(document.getElementById('wifeAge')?.value) || 0;
+  
+  // 両方の年齢が入力されていない場合は何もしない
+  if (husbandAge === 0 || wifeAge === 0) {
+    return;
+  }
+  
+  const ageDifference = Math.abs(husbandAge - wifeAge);
+  const stepElement = document.querySelector('.form-step[data-step="1"]');
+  
+  if (!stepElement) return;
+  
+  // 既存のアラートを削除
+  const existingAlert = stepElement.querySelector('.age-difference-alert');
+  if (existingAlert) {
+    existingAlert.remove();
+  }
+  
+  // 年齢差が5歳以上の場合、警告を表示
+  if (ageDifference >= diagnosisCriteria.ageDifferenceWarning) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'age-difference-alert';
+    alertDiv.style.cssText = `
+      background-color: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: start;
+      gap: 0.75rem;
+    `;
+    alertDiv.innerHTML = `
+      <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.5rem; margin-top: 0.25rem;"></i>
+      <div style="flex: 1;">
+        <strong style="color: #92400e; font-size: 1rem;">年齢差に関する注意</strong><br>
+        <span style="color: #78350f; font-size: 0.9rem;">
+          夫婦の年齢差が${ageDifference}歳あります。配偶者単独期間が長くなる可能性があるため、
+          遺族年金や老後資金の準備について特に注意が必要です。
+        </span>
+      </div>
+    `;
+    
+    // ステップの最後に追加
+    stepElement.appendChild(alertDiv);
   }
 }
 
