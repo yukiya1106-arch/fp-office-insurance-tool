@@ -24,7 +24,15 @@ function generateSlidesHTML(results) {
   // スライド5: 3大疾病リスク分析
   slides.push(generateCriticalIllnessRiskSlide(results));
   
-  // スライド6: 総合評価とおすすめ商品
+  // 50歳以上の場合、老後ステージスライドを追加
+  const { userData } = results;
+  const husbandAge = parseInt(userData.husbandAge) || 0;
+  const wifeAge = parseInt(userData.wifeAge) || 0;
+  if (husbandAge >= 50 || wifeAge >= 50) {
+    slides.push(generateRetirementStagesSlide(results));
+  }
+  
+  // スライド6（または7）: 総合評価とおすすめ商品
   slides.push(generateRecommendationSlide(results));
   
   return slides.join('');
@@ -550,6 +558,114 @@ function generateRecommendationSlide(results) {
             <strong>次のステップ</strong><br>
             FPとの面談で、あなたに最適な保険プランを詳しくご提案いたします。<br>
             この診断結果をもとに、具体的な保険料や加入手続きについてご説明させていただきます。
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 老後の3つのステージスライド（50歳以上向け）
+ */
+function generateRetirementStagesSlide(results) {
+  const { retirementStages } = socialSecurityInfo;
+  
+  return `
+    <div class="slide">
+      <div class="slide-header">
+        <h1 class="slide-title">老後の3つのステージと必要な備え</h1>
+        <p class="slide-subtitle">Retirement Life Stages - 50歳以上の方へ</p>
+      </div>
+      <div class="slide-content">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong>${retirementStages.title}</strong><br>
+            ${retirementStages.description}
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+          ${retirementStages.stages.map((stage, index) => `
+            <div style="background: linear-gradient(135deg, ${stage.color}15 0%, ${stage.color}25 100%); border: 2px solid ${stage.color}; border-radius: 12px; padding: 1.5rem;">
+              <div style="text-align: center; margin-bottom: 1rem;">
+                <i class="fas ${stage.icon}" style="font-size: 2.5rem; color: ${stage.color};"></i>
+              </div>
+              <h3 style="font-size: 1.2rem; font-weight: 700; color: ${stage.color}; text-align: center; margin: 0 0 0.5rem 0;">
+                ${index + 1}. ${stage.name}
+              </h3>
+              <p style="text-align: center; font-size: 0.9rem; color: #64748b; margin: 0 0 1rem 0;">
+                ${stage.age}（${stage.period}）
+              </p>
+              
+              <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">特徴</h4>
+                ${stage.characteristics.map(char => `
+                  <p style="font-size: 0.85rem; color: #475569; margin: 0.25rem 0;">• ${char}</p>
+                `).join('')}
+              </div>
+              
+              <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: #ef4444; margin: 0 0 0.5rem 0;">リスク</h4>
+                ${stage.risks.map(risk => `
+                  <p style="font-size: 0.85rem; color: #b91c1c; margin: 0.25rem 0;">⚠ ${risk}</p>
+                `).join('')}
+              </div>
+              
+              <div style="background: white; padding: 1rem; border-radius: 8px;">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: #10b981; margin: 0 0 0.5rem 0;">必要な備え</h4>
+                ${stage.preparation.map(prep => `
+                  <p style="font-size: 0.85rem; color: #047857; margin: 0.25rem 0;">✓ ${prep}</p>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9; border-radius: 12px; padding: 1.5rem; margin-top: 2rem;">
+          <h3 style="font-size: 1.3rem; font-weight: 700; color: #0c4a6e; margin: 0 0 1rem 0;">
+            <i class="fas fa-calculator"></i> ${retirementStages.totalEstimate.title}
+          </h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            ${retirementStages.totalEstimate.items.map(item => `
+              <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <p style="margin: 0; font-size: 0.9rem; color: #64748b;">${item.label}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 1.3rem; font-weight: 700; color: #0ea5e9;">${item.amount}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #94a3b8;">${item.detail}</p>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <p style="margin: 0; font-size: 1rem; font-weight: 600; color: #991b1b;">必要総額</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700; color: #ef4444;">${retirementStages.totalEstimate.total}</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: #991b1b;">−</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-size: 1rem; font-weight: 600; color: #065f46;">公的年金</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #10b981;">${retirementStages.totalEstimate.publicPension}</p>
+              </div>
+              <div style="text-align: center;">
+                <p style="margin: 0; font-size: 1rem; color: #991b1b;">=</p>
+              </div>
+              <div>
+                <p style="margin: 0; font-size: 1rem; font-weight: 600; color: #991b1b;">不足額</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700; color: #ef4444;">${retirementStages.totalEstimate.shortage}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="alert alert-warning" style="margin-top: 2rem;">
+          <i class="fas fa-lightbulb"></i>
+          <div>
+            <strong>FPからのアドバイス</strong><br>
+            ${retirementStages.recommendation}
           </div>
         </div>
       </div>
