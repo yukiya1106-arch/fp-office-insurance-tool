@@ -401,6 +401,7 @@ app.get('/', (c) => {
         <script src="/static/js/insurance-data.js"></script>
         <script src="/static/js/diagnosis-engine.js"></script>
         <script src="/static/js/charts.js"></script>
+        <script src="/static/js/results-display.js"></script>
         <script src="/static/js/main.js"></script>
     </body>
     </html>
