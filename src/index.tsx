@@ -40,7 +40,7 @@ app.get('/', (c) => {
             <div class="container">
                 <div class="header-content">
                     <div class="logo">
-                        <i class="fas fa-shield-heart"></i>
+                        <img src="/static/images/fp-office-logo.png" alt="FP Office" style="height: 50px; margin-right: 15px;">
                         <span>保険診断システム</span>
                     </div>
                     <div class="header-subtitle">
