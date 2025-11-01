@@ -301,6 +301,14 @@ app.get('/', (c) => {
                                     <option value="poor">持病あり</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="wifeAdditionalBenefit">付加給付制度</label>
+                                <select id="wifeAdditionalBenefit" name="wifeAdditionalBenefit" required>
+                                    <option value="corporate">大企業・公務員（上限2.5万円）</option>
+                                    <option value="sme">中小企業（上限5〜8万円）</option>
+                                    <option value="none">国保・その他（高額療養費のみ）</option>
+                                </select>
+                            </div>
                         </div>
 
                         <h3 class="subsection-title" style="margin-top: 2rem;">具体的な心配事</h3>
