@@ -250,6 +250,10 @@ app.get('/', (c) => {
                         <h2 class="step-title">
                             <i class="fas fa-heartbeat"></i> 健康・ライフスタイル
                         </h2>
+                        
+                        <h3 class="subsection-title">
+                            <i class="fas fa-male"></i> 世帯主の健康状態
+                        </h3>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="smoking">喫煙状況</label>
@@ -277,24 +281,78 @@ app.get('/', (c) => {
                             </div>
                         </div>
 
+                        <h3 class="subsection-title" style="margin-top: 2rem;">
+                            <i class="fas fa-female"></i> 配偶者の健康状態
+                        </h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="wifeSmoking">喫煙状況</label>
+                                <select id="wifeSmoking" name="wifeSmoking" required>
+                                    <option value="non-smoker">非喫煙者</option>
+                                    <option value="smoker">喫煙者</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wifeHealthStatus">健康状態</label>
+                                <select id="wifeHealthStatus" name="wifeHealthStatus" required>
+                                    <option value="excellent">優良体</option>
+                                    <option value="good">良好</option>
+                                    <option value="fair">普通</option>
+                                    <option value="poor">持病あり</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h3 class="subsection-title" style="margin-top: 2rem;">具体的な心配事</h3>
                         <div class="form-group full-width">
-                            <label>リスク懸念（該当するものをすべて選択）</label>
+                            <label>該当するものをすべて選択してください</label>
                             <div class="checkbox-group">
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="riskConcerns" value="mental">
-                                    <span>精神疾患リスク</span>
+                                    <input type="checkbox" name="concerns" value="income-loss">
+                                    <span>収入が途絶えたときの生活費</span>
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="riskConcerns" value="long-absence">
-                                    <span>長期休職の可能性</span>
+                                    <input type="checkbox" name="concerns" value="education-cost">
+                                    <span>子どもの教育費が払えなくなること</span>
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="riskConcerns" value="nursing-care">
-                                    <span>介護への備え</span>
+                                    <input type="checkbox" name="concerns" value="medical-cost">
+                                    <span>医療費が高額になること</span>
                                 </label>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="riskConcerns" value="inheritance">
-                                    <span>相続対策</span>
+                                    <input type="checkbox" name="concerns" value="retirement">
+                                    <span>老後の生活資金</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="concerns" value="family-life">
+                                    <span>万が一のときの家族の生活</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <h3 class="subsection-title" style="margin-top: 2rem;">保険選びの価値観</h3>
+                        <div class="form-group full-width">
+                            <label>該当するものをすべて選択してください</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="values" value="cost-priority">
+                                    <span>保険料を抑えたい（コスト重視）</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="values" value="coverage-priority">
+                                    <span>保障を充実させたい（安心重視）</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="values" value="savings">
+                                    <span>貯蓄性も欲しい（資産形成も考慮）</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="values" value="flexibility">
+                                    <span>将来の見直しがしやすい柔軟性</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="values" value="inheritance">
+                                    <span>家族に資産を残したい</span>
                                 </label>
                             </div>
                         </div>

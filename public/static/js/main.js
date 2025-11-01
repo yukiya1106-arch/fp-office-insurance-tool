@@ -338,11 +338,32 @@ function saveStepData(step) {
   const inputs = stepElement.querySelectorAll('input, select');
   inputs.forEach(input => {
     if (input.type === 'checkbox') {
-      if (!userData.riskConcerns) {
-        userData.riskConcerns = [];
+      // 心配事（concerns）のチェックボックス
+      if (input.name === 'concerns') {
+        if (!userData.concerns) {
+          userData.concerns = [];
+        }
+        if (input.checked && !userData.concerns.includes(input.value)) {
+          userData.concerns.push(input.value);
+        }
       }
-      if (input.checked && !userData.riskConcerns.includes(input.value)) {
-        userData.riskConcerns.push(input.value);
+      // 価値観（values）のチェックボックス
+      else if (input.name === 'values') {
+        if (!userData.values) {
+          userData.values = [];
+        }
+        if (input.checked && !userData.values.includes(input.value)) {
+          userData.values.push(input.value);
+        }
+      }
+      // 旧リスク懸念（後方互換性のため残す）
+      else if (input.name === 'riskConcerns') {
+        if (!userData.riskConcerns) {
+          userData.riskConcerns = [];
+        }
+        if (input.checked && !userData.riskConcerns.includes(input.value)) {
+          userData.riskConcerns.push(input.value);
+        }
       }
     } else {
       // 万円フィールドの場合は円に変換（×10000）
