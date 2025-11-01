@@ -479,7 +479,7 @@ function analyzeRisks(userData, deathBenefit) {
   const disabilityRiskScore = calculateDisabilityRiskScore(userData, existingDisability);
   
   // 3. 医療費リスク
-  const medicalRiskScore = calculateMedicalRiskScore(existingMedical, additionalBenefit);
+  const medicalRiskScore = calculateMedicalRiskScore(existingMedical, additionalBenefit, userData);
   
   // 4. 3大疾病リスク
   const criticalIllnessRiskScore = calculateCriticalIllnessRiskScore(userData, existingCancer);
@@ -523,21 +523,24 @@ function calculateDeathRiskScore(requiredBenefit, existingBenefit) {
  */
 function calculateDisabilityRiskScore(userData, existingDisability) {
   const riskConcerns = userData.riskConcerns || [];
+  const concerns = userData.concerns || [];
   const hasMentalRisk = riskConcerns.includes('mental');
   const hasLongAbsenceRisk = riskConcerns.includes('long-absence');
+  const hasIncomeLossConcern = concerns.includes('income-loss');
   
   if (existingDisability === 'comprehensive') return 90;
   if (existingDisability === 'basic') return 60;
   
-  // リスク懸念がある場合はスコアを下げる
-  if (hasMentalRisk || hasLongAbsenceRisk) return 20;
+  // リスク懸念や心配事がある場合はスコアを下げる
+  if (hasMentalRisk || hasLongAbsenceRisk || hasIncomeLossConcern) return 20;
   return 40;
 }
 
 /**
  * 医療費リスクスコア計算
  */
-function calculateMedicalRiskScore(existingMedical, additionalBenefit) {
+function calculateMedicalRiskScore(existingMedical, additionalBenefit, userData) {
+  const concerns = userData?.concerns || [];
   let score = 50;
   
   if (existingMedical === 'comprehensive') {
@@ -551,7 +554,12 @@ function calculateMedicalRiskScore(existingMedical, additionalBenefit) {
     score += 10; // 大企業・公務員は医療費負担が少ない
   }
   
-  return Math.min(100, score);
+  // 医療費の心配がある場合はスコアを下げる
+  if (concerns.includes('medical-cost')) {
+    score -= 10;
+  }
+  
+  return Math.max(0, Math.min(100, score));
 }
 
 /**
@@ -612,7 +620,7 @@ function analyzeCoverageAdequacy(userData, deathBenefit) {
 }
 
 /**
- * 保険商品マッチング
+ * 保険商品マッチング（価値観・心配事を考慮）
  */
 function matchInsuranceProducts(userData, riskAnalysis, coverageAnalysis) {
   const husbandAge = parseInt(userData.husbandAge);
@@ -623,53 +631,101 @@ function matchInsuranceProducts(userData, riskAnalysis, coverageAnalysis) {
   const otherAssets = parseInt(userData.otherAssets) || 0;
   const totalAssets = (savings + otherAssets) / 10000; // 万円
   
+  // 心配事と価値観を取得
+  const concerns = userData.concerns || [];
+  const values = userData.values || [];
+  const riskConcerns = userData.riskConcerns || []; // 旧リスク懸念（後方互換性）
+  
   const products = {
     highPriority: [],
     mediumPriority: [],
     lowPriority: []
   };
   
-  // 死亡保障
-  if (riskAnalysis.death.priority === 'high') {
+  // 1. 死亡保障（収入保障保険）
+  // 条件: 死亡リスクが高い OR 「家族の生活」「収入が途絶える」が心配
+  if (riskAnalysis.death.priority === 'high' || 
+      concerns.includes('family-life') || 
+      concerns.includes('income-loss')) {
     const incomeProducts = smoking === 'non-smoker' ? 
       insuranceDatabase.income.nonSmoker : 
       insuranceDatabase.income.smoker;
-    products.highPriority.push(...incomeProducts.map(p => ({...p, category: '収入保障保険'})));
+    
+    // 「安心重視」なら最優先、「コスト重視」なら中優先
+    if (values.includes('coverage-priority')) {
+      products.highPriority.push(...incomeProducts.map(p => ({...p, category: '収入保障保険', reason: '万が一のときの家族の生活を守る'})));
+    } else if (values.includes('cost-priority')) {
+      products.mediumPriority.push(...incomeProducts.map(p => ({...p, category: '収入保障保険', reason: 'コストを抑えつつ必要保障を確保'})));
+    } else {
+      products.highPriority.push(...incomeProducts.map(p => ({...p, category: '収入保障保険', reason: '万が一のときの家族の生活を守る'})));
+    }
   }
   
-  // 就業不能保険
-  if (riskAnalysis.disability.priority === 'high' || riskAnalysis.disability.priority === 'medium') {
+  // 2. 就業不能保険
+  // 条件: 就業不能リスクが高中 OR 「収入が途絶える」が心配
+  if (riskAnalysis.disability.priority === 'high' || 
+      riskAnalysis.disability.priority === 'medium' ||
+      concerns.includes('income-loss')) {
     const disabilityProducts = husbandAge < diagnosisCriteria.disabilityInsuranceAgeThreshold ? 
       insuranceDatabase.disability.under40 : 
       insuranceDatabase.disability.over40;
-    products.highPriority.push(...disabilityProducts.map(p => ({...p, category: '就業不能保険'})));
+    products.highPriority.push(...disabilityProducts.map(p => ({...p, category: '就業不能保険', reason: '働けなくなったときの収入を保障'})));
   }
   
-  // 医療保険
-  if (riskAnalysis.medical.priority === 'high' || riskAnalysis.medical.priority === 'medium') {
-    products.mediumPriority.push(...insuranceDatabase.medical.map(p => ({...p, category: '医療・がん保険'})));
-  }
-  
-  // 変額保険（資産形成）
-  if (totalAssets >= 100) {
-    if (husbandOccupation === 'self-employed') {
-      products.mediumPriority.push(...insuranceDatabase.variableProtection.map(p => ({...p, category: '変額保険（保障メイン）'})));
+  // 3. 医療・がん保険
+  // 条件: 医療リスクが高中 OR 「医療費が心配」
+  if (riskAnalysis.medical.priority === 'high' || 
+      riskAnalysis.medical.priority === 'medium' ||
+      concerns.includes('medical-cost')) {
+    
+    // 「安心重視」なら高優先、それ以外は中優先
+    if (values.includes('coverage-priority')) {
+      products.highPriority.push(...insuranceDatabase.medical.map(p => ({...p, category: '医療・がん保険', reason: '高額な医療費に備える'})));
     } else {
-      products.lowPriority.push(...insuranceDatabase.variableInvestment.map(p => ({...p, category: '変額保険（運用メイン）'})));
+      products.mediumPriority.push(...insuranceDatabase.medical.map(p => ({...p, category: '医療・がん保険', reason: '高額な医療費に備える'})));
     }
   }
   
-  // 一時払い終身保険
-  if (husbandAge >= diagnosisCriteria.seniorAgeThreshold && totalAssets >= diagnosisCriteria.minAssetsForLumpSum) {
-    products.mediumPriority.push(...insuranceDatabase.lumpSum.map(p => ({...p, category: '一時払い終身保険'})));
+  // 4. 変額保険（資産形成）
+  // 条件: 資産100万円以上 OR 「貯蓄性も欲しい」「資産を残したい」
+  if (totalAssets >= 100 || 
+      values.includes('savings') || 
+      values.includes('inheritance')) {
+    
+    if (husbandOccupation === 'self-employed') {
+      // 自営業: 保障メイン
+      products.mediumPriority.push(...insuranceDatabase.variableProtection.map(p => ({...p, category: '変額保険（保障メイン）', reason: '保障と資産形成を両立'})));
+    } else {
+      // 会社員: 運用メイン
+      if (values.includes('savings')) {
+        products.mediumPriority.push(...insuranceDatabase.variableInvestment.map(p => ({...p, category: '変額保険（運用メイン）', reason: '保険料控除を活用した資産形成'})));
+      } else {
+        products.lowPriority.push(...insuranceDatabase.variableInvestment.map(p => ({...p, category: '変額保険（運用メイン）', reason: '保険料控除を活用した資産形成'})));
+      }
+    }
   }
   
-  // 介護保険
-  if (husbandAge >= diagnosisCriteria.seniorAgeThreshold) {
-    const riskConcerns = userData.riskConcerns || [];
-    if (riskConcerns.includes('nursing-care')) {
-      products.mediumPriority.push(...insuranceDatabase.nursingCare.map(p => ({...p, category: '介護保険'})));
-    }
+  // 5. 一時払い終身保険
+  // 条件: 50歳以上 & 資産500万円以上 OR 「老後の心配」「資産を残したい」
+  if ((husbandAge >= diagnosisCriteria.seniorAgeThreshold && totalAssets >= diagnosisCriteria.minAssetsForLumpSum) ||
+      (concerns.includes('retirement') && totalAssets >= 300) ||
+      values.includes('inheritance')) {
+    products.mediumPriority.push(...insuranceDatabase.lumpSum.map(p => ({...p, category: '一時払い終身保険', reason: '相続対策と資産運用を両立'})));
+  }
+  
+  // 6. 介護保険
+  // 条件: 50歳以上 OR 「老後の心配」
+  if (husbandAge >= diagnosisCriteria.seniorAgeThreshold || 
+      concerns.includes('retirement') ||
+      riskConcerns.includes('nursing-care')) {
+    products.mediumPriority.push(...insuranceDatabase.nursingCare.map(p => ({...p, category: '介護保険', reason: '介護費用に備える'})));
+  }
+  
+  // 優先度の調整（価値観による）
+  // 「柔軟性重視」の場合、すべての商品を中優先に
+  if (values.includes('flexibility')) {
+    products.mediumPriority.push(...products.highPriority);
+    products.highPriority = [];
   }
   
   return products;
