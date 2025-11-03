@@ -43,8 +43,14 @@ app.get('/', (c) => {
                         <img src="/static/images/fp-office-logo.png" alt="FP Office" style="height: 50px; margin-right: 15px;">
                         <span>保険診断システム</span>
                     </div>
-                    <div class="header-subtitle">
-                        <i class="fas fa-user-tie"></i> ファイナンシャルプランナー専用
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <a href="/static/four_life_risks_social_security_2025.pdf" target="_blank" class="pdf-link" style="display: flex; align-items: center; gap: 8px; color: white; text-decoration: none; background-color: rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; transition: background-color 0.3s;">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>人生の4つのリスクと社会保障制度</span>
+                        </a>
+                        <div class="header-subtitle">
+                            <i class="fas fa-user-tie"></i> ファイナンシャルプランナー専用
+                        </div>
                     </div>
                 </div>
             </div>
