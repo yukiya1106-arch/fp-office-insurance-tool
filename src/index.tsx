@@ -40,7 +40,6 @@ app.get('/', (c) => {
             <div class="container">
                 <div class="header-content">
                     <div class="logo">
-                        <img src="/static/images/fp-office-logo.png" alt="FP Office" style="height: 50px; margin-right: 15px;">
                         <span>保険診断システム</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
